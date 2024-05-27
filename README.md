@@ -1,10 +1,12 @@
 # trackmiddle
 middle server for osmand
-For use, you must clone directory and chnge variables:
+For use, you must clone directory and chnge variables in conf/conf.txt
 port1 - default script port
 port2 - backup script port
 osmandport - traccar osmand port
 containername - traccar ip, hostname or containername
+accuracyerr - if accuracy > accuracyerr, then accuracy=0
+yaapikey - apikey for yandex locator service
 
 file conf/ip.txt contains json with ip/coordinates/altitude/accuracy
 
@@ -26,4 +28,4 @@ compose example:
       TZ: "Europe/Moscow"
     volumes:
       - ./ip.txt:/httpserver/conf/ip.txt
-      - ./server.py:/httpserver/server.py
+      - ./conf.txty:/httpserver/conf/conf.txt
