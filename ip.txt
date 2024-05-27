@@ -1,0 +1,11 @@
+[
+    {"mask": "10.255.253.0/24", "name": "dc", "lat": "55.890440", "lon": "37.436945", "accuracy": "3", "altitude": "0", "rnd": 8},
+    {"mask": "10.255.10.0/27", "name": "fa", "lat": "53.094277", "lon": "48.420647", "accuracy": "5", "altitude": "15", "rnd": 8},
+    {"mask": "10.255.10.32/27", "name": "lam", "lat": "55.890758", "lon": "37.424461", "accuracy": "5", "altitude": "5", "rnd": 8},
+    {"mask": "10.255.10.64/27", "name": "p1", "lat": "55.886340", "lon": "37.426964", "accuracy": "5", "altitude": "45", "rnd": 8},
+    {"mask": "10.255.254.0/23", "name": "home", "lat": "55.916847", "lon": "37.407930", "accuracy": "5", "altitude": "165", "rnd": 8},
+    {"mask": "10.255.10.224/27", "name": "atol", "lat": "55.808412", "lon": "37.629909", "accuracy": "5", "altitude": "35", "rnd": 8},
+    {"mask": "89.255.71.41/32", "name": "home", "lat": "55.916847", "lon": "37.407930", "accuracy": "5", "altitude": "165", "rnd": 8},
+    {"mask": "62.213.14.166/32", "name": "fa", "lat": "53.094277", "lon": "48.420647", "accuracy": "5", "altitude": "15", "rnd": 8},
+    {"mask": "109.196.132.33/32", "name": "atol", "lat": "55.808412", "lon": "37.629909", "accuracy": "5", "altitude": "35", "rnd": 8}
+]
