@@ -11,23 +11,32 @@ import random
 import requests
 
 print ("---------------start----------------")
+with open('conf/conf.txt') as conffile:
+  print(f'{datetime.datetime.now().strftime("%Y-%m-%d %X")} open conf json file')
+  conff = conffile.read()
+  confj = json.loads(conff)
+
+print(f'{datetime.datetime.now().strftime("%Y-%m-%d %X")} youre configuration is\n{confj[0]}')
+
 ######must be filled
 #port for trackmiddle
-port1=8899
+port1=confj[0]["port1"]
 #backup port for trackmiddle
-port2=8898
+port2=confj[0]["port2"]
 #traccar osmand port
-osmandport="15055"
+osmandport=confj[0]["osmandport"]
 #traccar ip/hostname/containername
-containername="traccar"
+containername=confj[0]["containername"]
+#containername="127.0.0.1"
 ######must be filled
-accuracyerr=1000
+accuracyerr=confj[0]["accuracyerr"]
+ipheader=confj[0]["header"]
 hostname="http://"+containername+":"+osmandport
 key="id="
 key='/?'+key
 
 yandexurl="https://api.lbs.yandex.net/geolocation/"
-yaapikey="24ae0420-1a56-4c0c-af5f-2b8eb4ad0138"
+keysarr=[confj[0]["yaapikey1"],confj[0]["yaapikey2"],confj[0]["yaapikey3"]]
 
 
 with open('conf/ip.txt') as ipfile:
@@ -35,11 +44,21 @@ with open('conf/ip.txt') as ipfile:
   ipf = ipfile.read()
   ipj = json.loads(ipf)
 
+class bcolors:
+    HEADER = '\033[95m'
+    OKBLUE = '\033[94m'
+    OKCYAN = '\033[96m'
+    OKGREEN = '\033[92m'
+    WARNING = '\033[93m'
+    FAIL = '\033[91m'
+    ENDC = '\033[0m'
+    BOLD = '\033[1m'
+    UNDERLINE = '\033[4m'
 
 class CustomHttpRequestHandler(http.server.SimpleHTTPRequestHandler):
     def _set_headers(self):
         self.send_response(200)
-        self.send_header('Content-type', 'text/html')
+        self.send_header('Content-type', 'application/x-www-form-urlencoded')
         self.end_headers()
     def do_POST(self):
         global ipj
@@ -48,38 +67,40 @@ class CustomHttpRequestHandler(http.server.SimpleHTTPRequestHandler):
         uri=urllib.parse.unquote(self.path)
         ipislocal = False
         if uri.startswith(key):
-          devid = re.search('id=(.*)&t', uri)
+          devid = re.search('id=(.*)&time', uri)
           devid = devid.group(1)
-          print(f'{datetime.datetime.now().strftime("%Y-%m-%d %X")} =============================== script started for device {devid} ========================')
+          uri=uri.replace('&lat=&', '&lat=0.0&')
+          uri=uri.replace('&lon=&', '&lon=0.0&')
+          uri=uri.replace('&realip=&', '&')
+          print(f'{bcolors.OKBLUE}{datetime.datetime.now().strftime("%Y-%m-%d %X")} script started for device {devid}{bcolors.ENDC}')
           print(f'{datetime.datetime.now().strftime("%Y-%m-%d %X")} youre uri={uri}')
-          print(f'{datetime.datetime.now().strftime("%Y-%m-%d %X")} youre ip={self.client_address[0]}')
+
+
           try:
-            print(f'{datetime.datetime.now().strftime("%Y-%m-%d %X")} headers=\n{self.headers}')
+            print(f'{bcolors.HEADER}{datetime.datetime.now().strftime("%Y-%m-%d %X")} headers=\n{self.headers}{bcolors.ENDC}')
             try:
-              print(f'{datetime.datetime.now().strftime("%Y-%m-%d %X")} check header ip')
-              ip = ipaddress.ip_address(self.headers["x-real-ip"])
-              print(f'{datetime.datetime.now().strftime("%Y-%m-%d %X")} headerip={ip}')
+              ip = ipaddress.ip_address(self.headers[ipheader])
             except:
               ip = ipaddress.ip_address(self.client_address[0])
+            try:
+              realip = re.search('&realip=(\\d*.\\d*.\\d*.\\d*)&', uri)
+              realip = realip.group(1)
+              realip = ipaddress.ip_address(realip)
+            except:
+              realip = ip
+            print(f'{bcolors.BOLD}{datetime.datetime.now().strftime("%Y-%m-%d %X")} yore ip={ip}{bcolors.ENDC}')
+            print(f'{bcolors.BOLD}{datetime.datetime.now().strftime("%Y-%m-%d %X")} yore realip={realip}{bcolors.ENDC}')
             for item in ipj:
               msk = ipaddress.ip_network(item["mask"])
-#              print(f'{datetime.datetime.now().strftime("%Y-%m-%d %X")} ip={ip} mask={msk}')
-              if ip in msk:
-                print(f'{datetime.datetime.now().strftime("%Y-%m-%d %X")} mask true')
-                print(f'{datetime.datetime.now().strftime("%Y-%m-%d %X")} msk={msk} ip={ip}')
-                print(f'{datetime.datetime.now().strftime("%Y-%m-%d %X")} json string={item}')
-
-
-#                latr = item["lat"]
-#                lonr = item["lon"]
+              if (ip in msk) or (realip in msk):
+                print(f'{bcolors.BOLD}{datetime.datetime.now().strftime("%Y-%m-%d %X")} msk={msk} ip={ip} realip={realip} loc={item["name"]}{bcolors.ENDC}')
+                ipislocal = True
 
                 latr = item["lat"]
                 lonr = item["lon"]
-                r=random.randint(0,99)
                 latr = latr[:item["rnd"]] + str(random.randint(0,99))
                 lonr = lonr[:item["rnd"]] + str(random.randint(0,99))
 
-                print(f'{datetime.datetime.now().strftime("%Y-%m-%d %X")} uri_old={uri}')
                 lat = re.search('lat=(\\d*.\\d*)&', uri)
                 lat = lat.group(1)
                 lon = re.search('lon=(\\d*.\\d*)&', uri)
@@ -87,13 +108,10 @@ class CustomHttpRequestHandler(http.server.SimpleHTTPRequestHandler):
                 try:
                   accuracyr=''
                   accuracy = re.search('accuracy=(\\d*.\\d*)&', uri)
-                  print (f'{datetime.datetime.now().strftime("%Y-%m-%d %X")} old_accuracy={accuracy.group(1)}')
                   accuracy = 'accuracy='+accuracy.group(1)
-                  print(item["accuracy"])
                   accuracyr = 'accuracy='+item["accuracy"]
                   uri = uri.replace(accuracy, accuracyr)
                 except:
-                  print(f'{datetime.datetime.now().strftime("%Y-%m-%d %X")} accuracy empty')
                   uri = uri + '&accuracy='+item["accuracy"]
                 try:
                   altitude = re.search('altitude=(\\d*.\\d*)&', uri)
@@ -101,7 +119,6 @@ class CustomHttpRequestHandler(http.server.SimpleHTTPRequestHandler):
                   altituder = 'altitude='+item["altitude"]
                   uri = uri.replace(altitude, altituder)
                 except:
-                  print(f'{datetime.datetime.now().strftime("%Y-%m-%d %X")} altitude empty')
                   uri = uri + '&altitude='+item["altitude"]
                 try:
                   speed = re.search('&speed=(\\d*.\\d*)&', uri)
@@ -109,82 +126,64 @@ class CustomHttpRequestHandler(http.server.SimpleHTTPRequestHandler):
                   speedr = 'speed=0'
                   uri = uri.replace(speed, speedr)
                 except:
-                  print(f'{datetime.datetime.now().strftime("%Y-%m-%d %X")}  speed empty')
                   uri = uri + '&speed=0'
 
 
-#                print(f'{datetime.datetime.now().strftime("%Y-%m-%d %X")} if accuracy {accuracy} accurancyr {accuracyr}')
-#                if accuracy > item["accuracy"]:
-#                  print(f'{datetime.datetime.now().strftime("%Y-%m-%d %X")} fix accuracy from {accuracy} to {accuracyr}')
-#                  uri = uri.replace(accuracy, accuracyr)
-
                 uri=uri.replace(lat, latr)
                 uri=uri.replace(lon, lonr)
-                ipislocal = True
-#                uri=uri.replace('&driverUniqueId=&', '&')
                 uri=uri + '&script=trackmiddle'
                 uri=uri+ '&loc='+item["name"]
-                print(f'{datetime.datetime.now().strftime("%Y-%m-%d %X")} uri_new={uri}')
+                ipislocal = True
 
             content_len = self.headers.get("Content-Length")
-            print(content_len)
-#            body = self.rfile.read(int(content_len))
-#            print(str(body))
-            if int(content_len) > 6 and ipislocal is False:
+            if int(content_len) > 160 and ipislocal is False: # and checkrealip !='':
               body = self.rfile.read(int(content_len))
-#              print(body)
-              print(yaapikey)
+              yaapikeyj=random.choices(keysarr, k=1)
+              yaapikey=yaapikeyj[0]
+              print(f'{datetime.datetime.now().strftime("%Y-%m-%d %X")} start yandex yaapikey={yaapikey}')
               yandexjson=str(body)
-              print(f'{datetime.datetime.now().strftime("%Y-%m-%d %X")} work with body')
               yandexjson=yandexjson.replace('yaapikey', yaapikey)
               yandexjson=yandexjson.replace('b\'', '')
               yandexjson=yandexjson.replace('}\'', '}')
-              print(f'{datetime.datetime.now().strftime("%Y-%m-%d %X")} body={yandexjson}')
               ryan = requests.post(url=yandexurl,data=yandexjson)
-              print(f'{datetime.datetime.now().strftime("%Y-%m-%d %X")} yandexresponse={ryan.content}')
-              print(f'{datetime.datetime.now().strftime("%Y-%m-%d %X")} uri_old={uri}')
-              lat = re.search('lat=(\\d*.\\d*)&', uri)
-              lat = lat.group(1)
-              lon = re.search('lon=(\\d*.\\d*)&', uri)
-              lon = lon.group(1)
               yandexjsonresponse = json.loads(ryan.content)
-              print(f'{datetime.datetime.now().strftime("%Y-%m-%d %X")} {yandexjsonresponse}')
-              latr=yandexjsonresponse["position"]["latitude"]
-              lonr=yandexjsonresponse["position"]["longitude"]
-              print(f'{lat} {lon} {yandexjsonresponse["position"]["latitude"]} {yandexjsonresponse["position"]["longitude"]}')
-              print(f'uri={uri}')
-              uri=uri.replace(lat, str(latr))
-              uri=uri.replace(lon, str(lonr))
-              if yandexjsonresponse["position"]["precision"] <= accuracyerr:
-                try:
-                  accuracy = re.search('accuracy=(\\d*.\\d*)&', uri)
-                  accuracy = 'accuracy='+accuracy.group(1)
-                  accuracyr = 'accuracy='+yandexjsonresponse["position"]["precision"]
-                  uri = uri.replace(accuracy, str(accuracy))
-                except:
-                  print(f'{datetime.datetime.now().strftime("%Y-%m-%d %X")} accuracy empty')
-                  uri = uri + '&accuracy='+str(yandexjsonresponse["position"]["precision"])
-              else:
-                uri = uri + '&accuracy=0'
-              print(f'{datetime.datetime.now().strftime("%Y-%m-%d %X")} coordinates fixed by yandex')
+              print(f'{bcolors.OKCYAN}{datetime.datetime.now().strftime("%Y-%m-%d %X")} yandexjson={yandexjson}{bcolors.ENDC}')
+              if "error" not in str(yandexjsonresponse):
+                print(f'{bcolors.WARNING}{datetime.datetime.now().strftime("%Y-%m-%d %X")} yandex ok, length={int(content_len)} yandexjsonresponse={yandexjsonresponse}{bcolors.ENDC}')
+                latr=yandexjsonresponse["position"]["latitude"]
+                lonr=yandexjsonresponse["position"]["longitude"]
+                lat = re.search('lat=(\\d*.\\d*)&', uri)
+                lat = lat.group(1)
+                lon = re.search('lon=(\\d*.\\d*)&', uri)
+                lon = lon.group(1)
+                uri=uri.replace(lat, str(latr))
+                uri=uri.replace(lon, str(lonr))
+                uri=uri+'&yaloc=true'
+                if yandexjsonresponse["position"]["precision"] <= accuracyerr:
+                  try:
+                    accuracy = re.search('accuracy=(\\d*.\\d*)&', uri)
+                    accuracy = 'accuracy='+accuracy.group(1)
+                    accuracyr = 'accuracy='+yandexjsonresponse["position"]["precision"]
+                    uri = uri.replace(accuracy, str(accuracy))
+                  except:
+                    uri = uri + '&accuracy='+str(yandexjsonresponse["position"]["precision"])
+                else:
+                  uri = uri + '&accuracy=0'
+                print(f'{bcolors.OKGREEN}{datetime.datetime.now().strftime("%Y-%m-%d %X")} coordinates fixed by yandex{bcolors.ENDC}')
 
 
 
-            print(f'{datetime.datetime.now().strftime("%Y-%m-%d %X")} sending message')
-            print(f'{datetime.datetime.now().strftime("%Y-%m-%d %X")} hostname={hostname}')
-            print(f'{datetime.datetime.now().strftime("%Y-%m-%d %X")} path={uri}')
-            print(f'{datetime.datetime.now().strftime("%Y-%m-%d %X")} ip={str(ip)}')
             uri=uri.replace('&driverUniqueId=&', '&')
             url=hostname+uri+'&sourceip='+str(ip)
-            print(f'{datetime.datetime.now().strftime("%Y-%m-%d %X")} request={url}')
-            r = requests.post(url=url,data="")
-            print(f'{datetime.datetime.now().strftime("%Y-%m-%d %X")} !!!!!!!!!!!!!!!!!!!!response from traccar={r}')
+            print(f'{bcolors.BOLD}{datetime.datetime.now().strftime("%Y-%m-%d %X")} request={url}{bcolors.ENDC}')
+            req = requests.post(url=url,data="")
+            print(f'{bcolors.OKCYAN}{datetime.datetime.now().strftime("%Y-%m-%d %X")} response from traccar={req}{bcolors.ENDC}')
             self._set_headers()
-            self.send_response(r.status_code)
+            self.send_response(req.status_code)
             self.end_headers()
             self.path = 'true.txt'
           except:
-            print(f'{datetime.datetime.now().strftime("%Y-%m-%d %X")} !!!!!!!!!!!!!!!!!!!!!!!!parsing fail!!!!!!!!!!!!!!!')
+            print(f'{bcolors.FAIL}{datetime.datetime.now().strftime("%Y-%m-%d %X")} parsing fail!{bcolors.ENDC}')
             self.send_response(500)
             self.path = 'fail.txt'
         else:
@@ -192,19 +191,12 @@ class CustomHttpRequestHandler(http.server.SimpleHTTPRequestHandler):
           self.send_response(400)
           self.path = 'fail.txt'
         if (self.path == 'true.txt'):
-           print(f'{datetime.datetime.now().strftime("%Y-%m-%d %X")} =======================script finished for device {devid}=========================')
+           print(f'{bcolors.OKGREEN}{datetime.datetime.now().strftime("%Y-%m-%d %X")} script finished for device {devid}{bcolors.ENDC}')
         else:
-          print(f'{datetime.datetime.now().strftime("%Y-%m-%d %X")} false={self.client_address}')
-        return http.server.SimpleHTTPRequestHandler.do_GET(self)
+          print(f'{bcolors.FAIL}{datetime.datetime.now().strftime("%Y-%m-%d %X")} false={self.client_address} device={devid}{bcolors.ENDC}')
     def do_GET(self):
-      if self.path == '/favicon.ico':
-        print(f'{datetime.datetime.now().strftime("%Y-%m-%d %X")} skip favicon')
-        self.send_response(400)
-        self.path = 'fail.txt'
-      else:
-        self.send_response(400)
-        self.path = 'fail.txt'
-      return http.server.SimpleHTTPRequestHandler.do_GET(self)
+      self.send_response(403)
+      self.path = 'fail.txt'
 
 handler = CustomHttpRequestHandler
 try:
@@ -216,6 +208,7 @@ except:
 print(f'{datetime.datetime.now().strftime("%Y-%m-%d %X")} Server started at port {port}. Press CTRL+C to close the server.')
 try:
   server.serve_forever()
+  httpd.timeout = 5
 except KeyboardInterrupt:
   server.server_close()
   print(f'{datetime.datetime.now().strftime("%Y-%m-%d %X")} Server Closed')

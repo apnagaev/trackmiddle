@@ -1,3 +1,13 @@
 [
-    {"port1": 8899, "port2": 8898, "osmandport": "5055", "containername": "traccar", "accuracyerr": 1000, "yaapikey": "yandex_locator_ip_key"}
+    {
+     "port1": 8899,
+     "port2": 8898,
+     "osmandport": "5055",
+     "containername": "traccar",
+     "accuracyerr": 1000,
+     "yaapikey1": "key1",
+     "yaapikey2": "key2",
+     "yaapikey3": "key3",
+     "header": "x-real-ip"
+     }
 ]

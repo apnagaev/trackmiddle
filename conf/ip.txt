@@ -1,4 +1,4 @@
 [
-    {"mask": "10.10.10.0/28", "name": "loc1", "lat": "56.890440", "lon": "36.436945", "accuracy": "3", "altitude": "0", "rnd": 8},
-    {"mask": "192.168.3.0/24", "name": "loc2", "lat": "52.094277", "lon": "49.420647", "accuracy": "5", "altitude": "15", "rnd": 8}
+    {"mask": "192.168.2.0/24", "name": "loc1", "lat": "56.890440", "lon": "34.436945", "accuracy": "3", "altitude": "0", "rnd": 8},
+    {"mask": "10.10.10.0/27", "name": "loc2", "lat": "52.094277", "lon": "49.420647", "accuracy": "5", "altitude": "15", "rnd": 8}
 ]
