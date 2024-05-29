@@ -6,9 +6,10 @@ port2 - backup script port
 osmandport - traccar osmand port
 containername - traccar ip, hostname or containername
 accuracyerr - if accuracy > accuracyerr, then accuracy=0
-yaapikey - apikey for yandex locator service
+yaapikey1-3 - randomized apikeys for yandex locator service, used with https://github.com/apnagaev/geotracking/blob/main/laptoplocation.ps1
+header - http header with real device IP
 
-file conf/ip.txt contains json with ip/coordinates/altitude/accuracy
+file conf/ip.txt contains json with ip/coordinates/altitude/accuracy/altitude and rnd parametrs. rnd make changes after rnd nubmer digit for avoid hits all devices to single point
 
 you can dockerize it
 docker build -t trackmiddle .
