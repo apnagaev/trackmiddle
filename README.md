@@ -18,11 +18,12 @@ compose example:
   trackmiddle:
     image: trackmiddle
     dns:
-      - 10.255.253.2
+      - dns_server_ip
     networks:
       - traccar
     ports:
       - 8899:8899
+      - 8898:8898
     container_name: trackmiddle
     restart: unless-stopped
     environment:
