@@ -138,7 +138,7 @@ class CustomHttpRequestHandler(http.server.SimpleHTTPRequestHandler):
             content_len = self.headers.get("Content-Length")
             if int(content_len) > 160 and ipislocal is False: # and checkrealip !='':
               body = self.rfile.read(int(content_len))
-              yaapikeyj=random.choices(keysarr, k=1)
+              yaapikeyj=random.choices(keysarr)
               yaapikey=yaapikeyj[0]
               print(f'{datetime.datetime.now().strftime("%Y-%m-%d %X")} start yandex yaapikey={yaapikey}')
               yandexjson=str(body)
